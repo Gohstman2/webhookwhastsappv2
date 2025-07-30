@@ -2,66 +2,65 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 
-require('dotenv').config();
-
 const app = express();
 app.use(bodyParser.json());
 
-const PORT = process.env.WEBHOOK_PORT || 4000;
-const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || 'http://localhost:3000/messages/send';
+// PORT obligatoire sur Render
+const PORT = process.env.PORT;
+if (!PORT) {
+    console.error('Erreur : La variable d\'environnement PORT est requise');
+    process.exit(1);
+}
 
-console.log(`🟢 Webhook actif sur http://localhost:${PORT}/webhook`);
+// Exemple : si tu veux répondre via une API (optionnel)
+const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || null;
+
+console.log(`🚀 Webhook serveur démarré sur le port ${PORT}`);
 
 app.post('/webhook', async (req, res) => {
     const { event, data } = req.body;
+    console.log(`📥 Événement reçu : ${event}`, data);
 
-    console.log('📥 Webhook reçu :', event);
-
-    // Traitement selon le type d'événement
     switch (event) {
         case 'message_received':
-            await handleIncomingMessage(data);
+            await handleMessageReceived(data);
             break;
-
         default:
-            console.log('❓ Événement non traité :', event);
-            break;
+            console.log('⚠️ Événement non géré :', event);
     }
 
     res.sendStatus(200);
 });
 
-async function handleIncomingMessage(data) {
+async function handleMessageReceived(data) {
     const { from, body } = data;
+    console.log(`💬 Message de ${from}: ${body}`);
 
-    console.log(`📨 Message de ${from} : ${body}`);
+    // Exemple : réponse automatique à certains messages
+    if (!WHATSAPP_API_URL) return;
 
-    // Exemple de logique : réponse automatique
-    if (body.toLowerCase() === 'bonjour') {
-        await reply(from, 'Salut ! Comment puis-je t’aider ?');
-    }
-
-    if (body.toLowerCase() === 'aide') {
-        await reply(from, 'Voici les commandes disponibles : bonjour, aide, info');
-    }
-
-    if (body.toLowerCase() === 'info') {
-        await reply(from, 'Bot WhatsApp connecté avec whatsapp-web.js 🟢');
+    try {
+        if (body.toLowerCase() === 'bonjour') {
+            await sendReply(from, 'Salut ! Comment puis-je t’aider ?');
+        } else if (body.toLowerCase() === 'aide') {
+            await sendReply(from, 'Commandes disponibles : bonjour, aide, info');
+        } else if (body.toLowerCase() === 'info') {
+            await sendReply(from, 'Bot WhatsApp via whatsapp-web.js');
+        }
+    } catch (err) {
+        console.error('Erreur en envoyant la réponse:', err.message);
     }
 }
 
-async function reply(to, message) {
-    try {
-        const res = await axios.post(WHATSAPP_API_URL, {
-            to,
-            message
-        });
-        console.log(`✅ Réponse envoyée à ${to}`);
-    } catch (err) {
-        console.error('❌ Erreur en envoyant la réponse :', err.message);
-    }
+async function sendReply(to, message) {
+    if (!WHATSAPP_API_URL) return;
+    await axios.post(WHATSAPP_API_URL, {
+        to,
+        message
+    });
+    console.log(`✅ Réponse envoyée à ${to}`);
 }
 
 app.listen(PORT, () => {
-    console.log(`🚀 Serveur webhook en écoute sur http://localhost:${PORT}`);
+    console.log(`🚀 Webhook serveur à l'écoute sur le port ${PORT}`);
 });
