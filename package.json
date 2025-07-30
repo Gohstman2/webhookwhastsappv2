@@ -1,9 +1,9 @@
 {
   "name": "whatsapp-webhook",
   "version": "1.0.0",
-  "main": "webhook-server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node webhook-server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
