@@ -5,7 +5,7 @@ import requests
 
 # === CONFIG ===
 API_BASE = "https://senhatsappv2.onrender.com"  # Ton API Node.js sur Render
-OPENROUTER_API_KEY = "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"
+OPENROUTER_API_KEY = "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"
 
 app = FastAPI()
 
