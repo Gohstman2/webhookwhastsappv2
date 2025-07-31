@@ -72,8 +72,32 @@ async function initClient() {
     authenticated = true;
     qrCodeBase64 = null;
   });
+ client.on('message', async (msg) => {
+  console.log(`📩 Nouveau message de ${msg.from}: ${msg.body}`);
 
+  // Préparer les données à envoyer
+  const payload = {
+    from: msg.from,        // ID WhatsApp (ex: "33712345678@c.us")
+    body: msg.body,        // Contenu du message
+    timestamp: msg.timestamp,
+    type: msg.type,        // Type (chat, image, audio, etc.)
+    isGroupMsg: msg.from.includes('@g.us'), // Vérifie si c'est un groupe
+  };
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    console.log('✅ Message relayé au webhook');
+  } catch (err) {
+    console.error('❌ Erreur en envoyant au webhook :', err.message);
+  }
+});
   client.initialize();
+  
+ 
 }
 
 initClient();
