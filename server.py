@@ -9,7 +9,8 @@ OPENROUTER_API_KEY = "sk-or-v1-2509e272ff48c28c94a1710efcf09b5b0b5e7649c7e90cd63
 
 app = FastAPI()
 
-# === Fonction pour envoyer un message WhatsApp via ton API Node.js ===
+
+# === Fonction pour envoyer un message WhatsApp via Node.js ===
 def send_whatsapp_message(number: str, message: str) -> bool:
     url = f"{API_BASE}/sendMessage"
     payload = {
@@ -18,21 +19,21 @@ def send_whatsapp_message(number: str, message: str) -> bool:
     }
     
     try:
-        response = requests.post(url, json=payload, timeout=10)
+        response = requests.post(url, json=payload, timeout=15)
         data = response.json()
         
         if data.get("success"):
             print(f"✅ Message envoyé à {number}")
             return True
         else:
-            print(f"❌ Erreur envoi WhatsApp : {data.get('error', 'Échec inconnu')}")
+            print(f"❌ Erreur WhatsApp : {data.get('error', 'Échec inconnu')}")
             return False
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Erreur de connexion à l'API WhatsApp : {e}")
+        print(f"⚠️ Erreur de connexion WhatsApp : {e}")
         return False
 
 
-# === Fonction pour interroger l'IA via OpenRouter ===
+# === Fonction pour obtenir une réponse IA avec timeout long et retry ===
 def get_ai_response(message: str) -> str:
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
@@ -46,43 +47,45 @@ def get_ai_response(message: str) -> str:
         ]
     }
     
-    try:
-        r = requests.post(url, headers=headers, json=payload, timeout=15)
-        r.raise_for_status()
-        data = r.json()
+    for attempt in range(2):  # 2 tentatives
+        try:
+            print(f"🔹 Tentative {attempt+1} pour contacter OpenRouter...")
+            r = requests.post(url, headers=headers, json=payload, timeout=60)
+            r.raise_for_status()
+            data = r.json()
 
-        # 🔹 Debug : Afficher la réponse brute
-        print("\n=== Réponse API OpenRouter ===")
-        print(json.dumps(data, indent=2, ensure_ascii=False))
+            # Debug complet
+            print("\n=== Réponse OpenRouter ===")
+            print(json.dumps(data, indent=2, ensure_ascii=False))
 
-        # Extraction du texte de réponse
-        answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        return answer.strip() or "Réponse vide de l'IA."
+            answer = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            return answer.strip() or "Réponse vide de l'IA."
+        
+        except requests.exceptions.Timeout:
+            print(f"⚠️ Timeout atteint (60s) - tentative {attempt+1}")
+            if attempt == 0:
+                print("↻ Nouvelle tentative...")
+                continue
+            return "Désolé, le serveur IA met trop de temps à répondre."
+        
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️ Erreur réseau OpenRouter : {e}")
+            return "Désolé, je rencontre un problème réseau pour répondre."
     
-    except requests.exceptions.RequestException as e:
-        print(f"⚠️ Erreur réseau OpenRouter : {e}")
-        return "Désolé, je rencontre un problème pour répondre (réseau)."
-    except json.JSONDecodeError:
-        print("⚠️ Erreur JSON de l'API OpenRouter.")
-        return "Désolé, problème de lecture de la réponse de l'IA."
-    except Exception as e:
-        print(f"⚠️ Erreur inconnue OpenRouter : {e}")
-        return "Désolé, je rencontre un problème pour répondre."
+    return "Désolé, problème technique côté serveur IA."
 
 
-# === Route par défaut pour tester que le webhook tourne ===
+# === Routes simples pour vérifier que le serveur fonctionne ===
 @app.get("/")
 def home():
     return {"status": "ok", "message": "Webhook actif ✅"}
 
-
-# === Nouvelle route GET qui retourne du texte avec code 200 ===
 @app.get("/status")
 def status():
     return "Activer ✅"
 
 
-# === Route Webhook pour recevoir les messages entrants ===
+# === Webhook WhatsApp ===
 @app.post("/whatsapp")
 async def receive_message(request: Request):
     data = await request.json()
@@ -94,16 +97,18 @@ async def receive_message(request: Request):
     message = data.get("body", "").strip()
     
     if not sender or not message:
+        print("⚠️ Message ignoré : pas de sender ou body")
         return {"status": "ignored"}
     
     number = "+" + sender.replace("@c.us", "")
     
-    # 🔹 Gestion des commandes simples
+    # Commande ping
     if message.lower() == ".ping":
         send_whatsapp_message(number, "pong ✅")
-    else:
-        # 🔹 Réponse automatique via IA
-        ai_reply = get_ai_response(message)
-        send_whatsapp_message(number, ai_reply)
+        return {"status": "pong"}
     
-    return {"status": "received"}
+    # Réponse automatique via IA
+    ai_reply = get_ai_response(message)
+    send_whatsapp_message(number, ai_reply)
+    
+    return {"status": "received", "reply": ai_reply}
