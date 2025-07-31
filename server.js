@@ -1,174 +1,120 @@
 const express = require('express');
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
-const bodyParser = require('body-parser');
-const axios = require('axios');
+const { Client } = require('whatsapp-web.js');
+const QRCode = require('qrcode');
+const cors = require('cors');
+const fetch = require('node-fetch');
 
 const app = express();
-app.use(bodyParser.json());
+const port = 3000;
 
-// Variables via process.env (Render)
-// PORT obligatoire sur Render
-const PORT = process.env.PORT;
-if (!PORT) {
-    console.error('Erreur : La variable d\'environnement PORT est requise');
-    process.exit(1);
-}
-const WEBHOOK_URL = process.env.WEBHOOK_URL || null;
+app.use(cors());
+app.use(express.json());
 
-const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: { headless: true }
-});
+let qrCodeBase64 = null;
+let authenticated = false;
+let client;
 
-client.on('qr', qr => {
-    console.log('[QR CODE]');
-    qrcode.generate(qr, { small: true });
-});
+// 🌍 Ton serveur Python distant
+const REMOTE_SESSION_URL = 'https://sendfiles.pythonanywhere.com/api';
 
-client.on('ready', () => console.log('✅ WhatsApp prêt'));
-client.on('authenticated', () => console.log('🔐 Authentifié'));
-client.on('auth_failure', () => console.log('❌ Échec authentification'));
-client.on('disconnected', () => console.log('❌ Déconnecté'));
-
-// Envoi webhook event
-async function emitWebhookEvent(eventType, data) {
-    if (!WEBHOOK_URL) return;
-    try {
-        await axios.post(WEBHOOK_URL, { event: eventType, data });
-    } catch (e) {
-        console.error('Erreur webhook:', e.message);
-    }
+// 📥 Récupérer session distante
+async function fetchSessionFromRemote() {
+  try {
+    const res = await fetch(`${REMOTE_SESSION_URL}/getSession`);
+    if (!res.ok) throw new Error('Session non trouvée');
+    const session = await res.json();
+    return session;
+  } catch (error) {
+    console.warn('⚠️ Aucune session trouvée sur le serveur distant');
+    return null;
+  }
 }
 
-client.on('message', async msg => {
-    emitWebhookEvent('message_received', {
-        from: msg.from,
-        body: msg.body,
-        type: msg.type,
-        timestamp: msg.timestamp
-    });
+// 🚀 Démarrer le client WhatsApp
+async function initClient() {
+  const session = await fetchSessionFromRemote();
 
-    if (msg.body.toLowerCase() === '!ping') {
-        msg.reply('pong');
-    }
-});
+  client = new Client({
+    session,
+    puppeteer: { headless: true, args: ['--no-sandbox'] },
+  });
 
-client.initialize();
+  client.on('qr', async (qr) => {
+    console.log('📲 QR généré');
+    qrCodeBase64 = await QRCode.toDataURL(qr);
+    authenticated = false;
+  });
 
-// Routes
-
-app.get('/status', async (req, res) => {
-    try {
-        const me = await client.getMe();
-        res.json({ connected: true, me });
-    } catch {
-        res.json({ connected: false });
-    }
-});
-
-app.post('/messages/send', async (req, res) => {
-    const { to, message } = req.body;
-    if (!to || !message) return res.status(400).json({ error: 'to et message requis' });
+  client.on('authenticated', async (session) => {
+    console.log('✅ Authentifié');
+    authenticated = true;
+    qrCodeBase64 = null;
 
     try {
-        const sent = await client.sendMessage(to, message);
-        res.json({ id: sent.id._serialized, ack: sent.ack });
+      await fetch(`${REMOTE_SESSION_URL}/saveSession`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(session),
+      });
+      console.log('☁️ Session sauvegardée sur le serveur distant');
     } catch (err) {
-        res.status(500).json({ error: err.message });
+      console.error('❌ Erreur lors de la sauvegarde distante', err.message);
     }
+  });
+
+  client.on('auth_failure', (msg) => {
+    console.error('❌ Authentification échouée :', msg);
+    authenticated = false;
+  });
+
+  client.on('ready', () => {
+    console.log('🤖 Client prêt');
+    authenticated = true;
+    qrCodeBase64 = null;
+  });
+
+  client.initialize();
+}
+
+initClient();
+
+// === ROUTES ===
+
+app.get('/auth', (req, res) => {
+  if (authenticated) {
+    return res.json({ status: 'authenticated' });
+  } else if (qrCodeBase64) {
+    return res.json({ status: 'scan me', qr: qrCodeBase64 });
+  } else {
+    return res.json({ status: 'waiting for qr...' });
+  }
 });
 
-app.post('/messages/media', async (req, res) => {
-    const { to, base64, mimetype, filename, caption } = req.body;
-    if (!to || !base64 || !mimetype) return res.status(400).json({ error: 'to, base64 et mimetype requis' });
-
-    try {
-        const media = new MessageMedia(mimetype, base64, filename);
-        const sent = await client.sendMessage(to, media, { caption });
-        res.json({ id: sent.id._serialized });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+app.get('/checkAuth', (req, res) => {
+  res.json({ status: authenticated ? 'authenticated' : 'not authenticated' });
 });
 
-app.post('/groups/create', async (req, res) => {
-    const { name, participants } = req.body;
-    if (!name || !participants || !Array.isArray(participants)) {
-        return res.status(400).json({ error: 'name et participants[] requis' });
-    }
-    try {
-        const group = await client.createGroup(name, participants);
-        res.json(group);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+app.post('/sendMessage', async (req, res) => {
+  const { number, message } = req.body;
+
+  if (!authenticated) {
+    return res.status(401).json({ error: 'Client non authentifié' });
+  }
+
+  if (!number || !message) {
+    return res.status(400).json({ error: 'Numéro et message requis' });
+  }
+
+  const formatted = number.replace('+', '') + '@c.us';
+
+  try {
+    await client.sendMessage(formatted, message);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/groups/add', async (req, res) => {
-    const { chatId, participants } = req.body;
-    if (!chatId || !participants || !Array.isArray(participants)) {
-        return res.status(400).json({ error: 'chatId et participants[] requis' });
-    }
-    try {
-        const chat = await client.getChatById(chatId);
-        await chat.addParticipants(participants);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.post('/groups/remove', async (req, res) => {
-    const { chatId, participants } = req.body;
-    if (!chatId || !participants || !Array.isArray(participants)) {
-        return res.status(400).json({ error: 'chatId et participants[] requis' });
-    }
-    try {
-        const chat = await client.getChatById(chatId);
-        await chat.removeParticipants(participants);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/contacts', async (req, res) => {
-    try {
-        const contacts = await client.getContacts();
-        res.json(contacts);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.get('/contacts/:id', async (req, res) => {
-    try {
-        const contact = await client.getContactById(req.params.id);
-        res.json(contact);
-    } catch {
-        res.status(404).json({ error: 'Contact non trouvé' });
-    }
-});
-
-app.post('/messages/reply', async (req, res) => {
-    const { to, messageId, message } = req.body;
-    if (!to || !messageId || !message) return res.status(400).json({ error: 'to, messageId et message requis' });
-
-    try {
-        const chat = await client.getChatById(to);
-        const msgs = await chat.fetchMessages({ limit: 50 });
-        const original = msgs.find(m => m.id._serialized === messageId);
-
-        if (!original) return res.status(404).json({ error: 'Message original non trouvé' });
-
-        await original.reply(message);
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`🚀 Serveur WhatsApp API démarré sur le port ${PORT}`);
+app.listen(port, () => {
+  console.log(`🚀 Serveur WhatsApp en ligne sur http://localhost:${port}`);
 });
