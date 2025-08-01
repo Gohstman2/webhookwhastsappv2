@@ -138,6 +138,7 @@ async def receive_message(request: Request):
     if msg_lc :
         if not mesClients:
             send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assiatant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+            mesClients.append({"number":number},{"nom":""},{"tache":"acceuil"},{"data":[]})
             return {"status": "pong"} 
         if msg_lc == "1":
             send_whatsapp_message(number, "Ok, Sur quelle bookmaker voulez vous deposez : \n 1- 1XBET  2-MELBET \n 3-BETWINNER  4-LINEBET \n 5-1WIN  6-WINWIN \n    7-888STARZ \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
