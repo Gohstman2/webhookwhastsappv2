@@ -110,6 +110,9 @@ async def receive_message(request: Request):
         send_whatsapp_message(number, "Oui salut ! que puis- je faire pour vous ? ")
         return {"status" : "pong" } 
     if message.lower() == ".depot":
+        send_whatsapp_message(number, "combien souhaitez vous deposer? ")
+        return {"status" : "pong" }
+    if message.lower() == ".depot":
     send_whatsapp_buttons(
         number,
         text="Souhaitez-vous créer un dépot maintenant ?",
