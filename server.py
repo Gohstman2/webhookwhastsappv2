@@ -134,27 +134,8 @@ async def receive_message(request: Request):
         send_whatsapp_message(number, "Oui salut ! Que puis-je faire pour vous ?")
         return {"status": "pong"}
 
-    if msg_lc == ".depot":
-        # Envoie d’un bouton "Faire un dépôt"
-        send_whatsapp_buttons(
-            number,
-            text="Souhaitez-vous créer un dépôt maintenant ?",
-            title="Assistant WhatsApp",
-            footer="Appuyez sur le bouton ci-dessous",
-            buttons=[
-                {"body": "Faire un dépôt"}
-            ]
-        )
-        return {"status": "bouton depot envoyé"}
-
     #veification pour agent depot retrait
-    if mdg_lc :
+    if msg_lc :
         if not mesClients:
             send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assiatant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT")
             return {"status": "pong"}
-
-    # Sinon, réponse IA
-    ai_reply = get_ai_response(message)
-    send_whatsapp_message(number, ai_reply)
-
-    return {"status": "received", "reply": ai_reply}
