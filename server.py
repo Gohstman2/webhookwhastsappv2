@@ -108,10 +108,57 @@ async def receive_message(request: Request):
         return {"status": "pong"}
     if message.lower() == "salut":
         send_whatsapp_message(number, "Oui salut ! que puis- je faire pour vous ? ")
-        return {"status" : "pong" }
+        return {"status" : "pong" } 
+    if message.lower() == ".depot":
+    send_whatsapp_buttons(
+        number,
+        text="Souhaitez-vous créer un dépot maintenant ?",
+        title="Assistant WhatsApp",
+        footer="Appuyez sur le bouton ci-dessous",
+        buttons=[
+            {"body": "Faire un dépot"}
+        ]
+    )
+    return {"status": "bouton depot envoyé"}
+
     
     # Réponse automatique via IA
     ai_reply = get_ai_response(message)
     send_whatsapp_message(number, ai_reply)
     
-    return {"status": "received", "reply": ai_reply}
+    return {"status": "received", "reply": ai_reply} 
+    def send_whatsapp_buttons(number: str, text: str, buttons: list, title: str = "", footer: str = "") -> bool:
+    """
+    Envoie un message avec des boutons WhatsApp via ton API Node.js.
+    
+    :param number: Numéro WhatsApp (ex: +226XXXXXXXX)
+    :param text: Message principal
+    :param buttons: Liste de boutons (ex: [{"body": "Option 1"}, {"body": "Option 2"}])
+    :param title: (optionnel) Titre du message
+    :param footer: (optionnel) Pied de page
+    :return: True si envoi réussi, False sinon
+    """
+    url = f"{API_BASE}/sendButtons"
+    payload = {
+        "number": number,
+        "text": text,
+        "title": title,
+        "footer": footer,
+        "buttons": buttons
+    }
+    
+    try:
+        response = requests.post(url, json=payload, timeout=15)
+        data = response.json()
+        
+        if data.get("success"):
+            print(f"✅ Boutons envoyés à {number}")
+            return True
+        else:
+            print(f"❌ Erreur envoi boutons : {data.get('error', 'Échec inconnu')}")
+            return False
+            
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️ Erreur connexion Node.js (boutons) : {e}")
+        return False
+
