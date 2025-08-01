@@ -106,6 +106,9 @@ async def receive_message(request: Request):
     if message.lower() == ".ping":
         send_whatsapp_message(number, "pong ✅")
         return {"status": "pong"}
+    if message.lower() == "salut":
+        send_whatsapp_message(number, "Oui salut ! que puis- je faire pour vous ? ")
+        return {"status" : "pong" }
     
     # Réponse automatique via IA
     ai_reply = get_ai_response(message)
