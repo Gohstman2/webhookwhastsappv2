@@ -6,8 +6,10 @@ import requests
 # === CONFIG ===
 API_BASE = "https://senhatsappv2.onrender.com"
 OPENROUTER_API_KEY = "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"
+mesClients = []
 
 app = FastAPI()
+
 
 
 # === Fonction pour envoyer un message WhatsApp ===
@@ -144,6 +146,12 @@ async def receive_message(request: Request):
             ]
         )
         return {"status": "bouton depot envoyé"}
+
+    #veification pour agent depot retrait
+    if mdg_lc :
+        if not mesClients:
+            send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assiatant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT")
+            return {"status": "pong"}
 
     # Sinon, réponse IA
     ai_reply = get_ai_response(message)
