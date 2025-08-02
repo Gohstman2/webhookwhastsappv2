@@ -12,6 +12,43 @@ mesClients = []
 
 app = FastAPI()
 
+
+#fonction pour envoyer un media
+def envoyer_media_whatsapp(media: dict, numero: str) -> bool:
+    """
+    Envoie un média WhatsApp en base64 à un numéro via l'API /sendMedia.
+    
+    :param media: Dictionnaire contenant 'data', 'mimetype', et 'filename'
+    :param numero: Numéro WhatsApp (ex: +22670123456)
+    :return: True si succès, False sinon
+    """
+    if not media or "data" not in media or "mimetype" not in media:
+        print("⚠️ Média invalide ou incomplet")
+        return False
+
+    url = f"{API_BASE}/sendMedia"
+    payload = {
+        "number": numero,
+        "media": {
+            "data": media["data"],  # base64
+            "mimetype": media["mimetype"],
+            "filename": media.get("filename", "fichier")  # nom par défaut
+        }
+    }
+
+    try:
+        response = requests.post(url, json=payload, timeout=15)
+        result = response.json()
+        if result.get("success"):
+            print(f"✅ Média envoyé à {numero}")
+            return True
+        else:
+            print(f"❌ Erreur API : {result.get('error', 'Échec inconnu')}")
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️ Erreur de connexion API : {e}")
+        return False
+
 # === UTILITAIRES ===
 def extraire_numero_local(message: str) -> str | None:
     message = re.sub(r'[^\d]', '', message)
@@ -106,6 +143,7 @@ async def receive_message(request: Request):
     data = await request.json()
     sender = data.get("from")
     message = data.get("body", "").strip()
+    media = data.get("media")
     if not sender or not message:
         return {"status": "ignored"}
 
@@ -239,6 +277,7 @@ async def receive_message(request: Request):
                     dernier_depot = client["depots"][-1] if client["depots"] else None
                     dernier_depot["numero"] = numero
                     send_whatsapp_message(number, f"Vous avez utilisé le numéro {dernier_depot["numero"]}. Merci de nous envoyer une capture d'écran de confirmation de la transaction.")
+                    client["etape"] = "capture"
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
@@ -248,5 +287,17 @@ async def receive_message(request: Request):
                 else:
                     send_whatsapp_message(number, "Numéro invalide. Envoyez uniquement les chiffres.")
                     return {"status": "pong"}
+            if client["etape"] == "capture":
+                if media :
+                    send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
+                    return {"status": "pong"}
+                elif msg_lc == "stop":
+                    send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
+                    send_whatsapp_message(number, "Choisissez :\n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
+                    return {"status": "pong"}
+                else : 
+                    send_whatsapp_message(number, "Veuillez nous envoyer une capture d'ecran Pour de votre message de transaction")
+                    return {"status": "pong"}
+                    
 
     return {"status": "traité"}
