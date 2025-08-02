@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import requests
 import re
+import uuid
 
 # === CONFIG ===
 API_BASE = "https://senhatsappv2.onrender.com"
@@ -195,7 +196,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.3")
+        send_whatsapp_message(number, "pong ✅ v1.4")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -303,9 +304,25 @@ async def receive_message(request: Request):
                     if client['etape'] == "montant" :
                         montant = extraire_montant(msg_lc)
                         if montant :
+                            unique_id = str(uuid.uuid4())[:8]  # Génère un petit ID unique
+                            depot_data = {
+                                "montant": montant,
+                                "idtrans": unique_id,
+                                "ID": "",
+                                "bookmaker": "",
+                                "numero": "",
+                                "reseaux": "",
+                                "statut": "en cours"
+                            }
+                            # Assure-toi que 'depots' est une liste
+                            if not client["data"].get("depots"):
+                                client["data"]["depots"] = [depot_data]
+                            else:
+                                client["data"]["depots"].append(depot_data)
                             send_whatsapp_message(number, f"Ok vous voulez un depot de {montant} Francs CFA \n Maintenant donner moi le ID de votre compte \n *S'il vous plait n'envoyer pas de capture*")
                             client['tache'] = "depot"
                             client['etape'] = "id"
+                            client['tacheId'] = unique_id
                             return {"status": "pong"}
                         else :
                             send_whatsapp_message(number, "*Montant invalide* \n Envoyer moi le montant que vous souhaitez recharger, Exemple : 1000 ")
@@ -367,8 +384,10 @@ async def receive_message(request: Request):
                             send_whatsapp_message(number, "Vous voulez faire : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
                             return {"status": "pong"}
                         else :
-                            send_whatsapp_message(number, f"Veuillez m'envoyer un numero valide \n le numero avec lequel vous avez effectuer la transaction \n si vous souhaitez tout annuler envoyez moi *Stop*")
+                            send_whatsapp_message(number, "Veuillez m'envoyer un numero valide \n le numero avec lequel vous avez effectuer la transaction \n si vous souhaitez tout annuler envoyez moi *Stop*")
                             return {"status": "pong"}
+                        
+                            
                             
                         
                         
