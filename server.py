@@ -12,7 +12,30 @@ mesClients = []
 
 app = FastAPI()
 
+# ma fonction aqui extrait le numero de telephone burkinabe
+def extraire_numero_local(message: str) -> str | None:
+    """
+    Extrait un numéro de téléphone local (8 chiffres) depuis un message.
+    Ignore les indicatifs comme +226 ou 00226.
+    """
 
+    # Supprimer les espaces, parenthèses et séparateurs
+    message = re.sub(r'[^\d]', '', message)
+
+    # Si le message commence par un indicatif international (ex. 00226 ou +226)
+    if message.startswith("00226"):
+        message = message[5:]
+    elif message.startswith("226"):
+        message = message[3:]
+    elif message.startswith("00"):
+        message = message[2:]
+
+    # Chercher un groupe de 8 chiffres
+    match = re.search(r'\d{8}$', message)
+    if match:
+        return match.group(0)
+
+    return None
 
 #fonction pour extraire le ID
 def extraire_id_utilisateur(message: str) -> int | None:
@@ -172,7 +195,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.2")
+        send_whatsapp_message(number, "pong ✅ v1.3")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -306,17 +329,50 @@ async def receive_message(request: Request):
                             return {"status": "pong"}
                     if client['etape'] == "reseaux" :
                         if msg_lc == "1" :
-                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *144*2*1*04264642*1000#  Nom : *BOKOUM ISSIAKA* \n Valider avec votre SIM ORANGE BF puis envoyer moi le numero avec leauel vous avez fait le transfert")
+                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n **144*2*1*04264642*1000# \n Nom : BOKOUM ISSIAKA* \n Valider avec votre SIM ORANGE BF puis envoyer moi le numero avec lequel vous avez fait le transfert")
+                            client['tache'] = "depot"
+                            client['etape'] = "numero"
                             return {"status": "pong"}
                         elif msg_lc == "2" :
-                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *555*2*1*63290016*1000# Nom : *ISSIAKO BUSINESS* \n Valider avec votre SIM MOOV BF puis envoyer moi le numero avec leauel vous avez fait le transfert")
+                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *555*2*1*63290016*1000# Nom : *ISSIAKO BUSINESS* \n Valider avec votre SIM MOOV BF puis envoyer moi le numero avec lequel vous avez fait le transfert")
+                            client['tache'] = "depot"
+                            client['etape'] = "numero"
                             return {"status": "pong"}
                         elif msg_lc == "3" :
-                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *808*2*1*58902040*1000# \n Valider avec votre SIM TELECEL BF puis envoyer moi le numero avec leauel vous avez fait le transfert")
+                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *808*2*1*58902040*1000# \n Valider avec votre SIM TELECEL BF puis envoyer moi le numero avec lequel vous avez fait le transfert")
+                            client['tache'] = "depot"
+                            client['etape'] = "numero"
                             return {"status": "pong"}
+                        elif msg_lc == "stop" :
+                            send_whatsapp_message(number, "*Votre demande de depot a ete annuler*")
+                            client['tache'] = "acceuil" 
+                            client['etape'] = ""
+                            client['data'] = []
+                            send_whatsapp_message(number, "Vous voulez faire : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+                            return {"status": "pong"}
+                            
                         else :
                             send_whatsapp_message(number, "J'ai pas compris votre choix , Si vous souhaitez tout annuler envoyer moi *stop*")
+                            return {"status": "pong"}
+                    if client['etape'] == "numero" :
+                        numero = extraire_numero_local(msg_lc)
+                        if numero :
+                            send_whatsapp_message(number, f"Ok vous avez uutiliser le numero {numero} \n Envoyer nous maintenant une capture d'ecrant du message de comfirmant cette transaction \n Cette capture est importante pour valider votre depot")
+                            return {"status": "pong"}
+                        elif msg_lc == "stop":
+                            send_whatsapp_message(number, "*Votre demande de depot a ete annuler*")
+                            client['tache'] = "acceuil" 
+                            client['etape'] = ""
+                            client['data'] = []
+                            send_whatsapp_message(number, "Vous voulez faire : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+                            return {"status": "pong"}
+                        else :
+                            send_whatsapp_message(number, f"Veuillez m'envoyer un numero valide \n le numero avec lequel vous avez effectuer la transaction \n si vous souhaitez tout annuler envoyez moi *Stop*")
+                            return {"status": "pong"}
                             
+                        
+                        
+                        
                             
                         
                                                   
