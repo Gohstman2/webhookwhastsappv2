@@ -196,7 +196,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.5")
+        send_whatsapp_message(number, "pong ✅ v1.6")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -212,7 +212,8 @@ async def receive_message(request: Request):
     "nom": "",
     "tache": "acceuil",
     "etape" : "",
-    "data": []
+    "data": [],
+    "tacheId":""
 })
     
             return {"status": "pong"}
@@ -234,7 +235,8 @@ async def receive_message(request: Request):
     "tache": "acceuil",
     "etape" : "",
     "data": [],
-    "depots":[]
+    "depots":[],
+    "tacheId":""
 })
         
 
