@@ -172,7 +172,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.1")
+        send_whatsapp_message(number, "pong ✅ v1.2")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -182,7 +182,7 @@ async def receive_message(request: Request):
     #veification pour agent depot retrait
     if msg_lc :
         if not mesClients:
-            send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assiatant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+            send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assistant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
             mesClients.append({
     "number": number,
     "nom": "",
@@ -291,6 +291,8 @@ async def receive_message(request: Request):
                         id = extraire_id_utilisateur(msg_lc)
                         if id:
                             send_whatsapp_message(number, f"Ok ! votre id est *{id}* \n Maintenant vous utiliser quelle reseaux pour le paiement \n 1-Orange Money \n 2-Moov Money \n 3-Telecel Money")
+                            client['tache'] = "depot"
+                            client['etape'] = "reseaux"
                             return {"status": "pong"}
                         elif msg_lc == "stop":
                             send_whatsapp_message(number, "*Votre demande de depot a ete annuler*")
@@ -299,6 +301,22 @@ async def receive_message(request: Request):
                             client['data'] = []
                             send_whatsapp_message(number, "Vous voulez faire : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
                             return {"status": "pong"}
+                        else :
+                            send_whatsapp_message(number, "*Je ne trouve pas votre id \n Envoyer moi uniquement le ID de votre compte,pas de capture \n *Exemple:897665403*")
+                            return {"status": "pong"}
+                    if client['etape'] == "reseaux" :
+                        if msg_lc == "1" :
+                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *144*2*1*04264642*1000#  Nom : *BOKOUM ISSIAKA* \n Valider avec votre SIM ORANGE BF puis envoyer moi le numero avec leauel vous avez fait le transfert")
+                            return {"status": "pong"}
+                        elif msg_lc == "2" :
+                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *555*2*1*63290016*1000# Nom : *ISSIAKO BUSINESS* \n Valider avec votre SIM MOOV BF puis envoyer moi le numero avec leauel vous avez fait le transfert")
+                            return {"status": "pong"}
+                        elif msg_lc == "3" :
+                            send_whatsapp_message(number, "Envoyer nous le montant en tapant : \n *808*2*1*58902040*1000# \n Valider avec votre SIM TELECEL BF puis envoyer moi le numero avec leauel vous avez fait le transfert")
+                            return {"status": "pong"}
+                        else :
+                            send_whatsapp_message(number, "J'ai pas compris votre choix , Si vous souhaitez tout annuler envoyer moi *stop*")
+                            
                             
                         
                                                   
