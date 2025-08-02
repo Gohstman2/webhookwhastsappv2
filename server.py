@@ -113,7 +113,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.6")
+        send_whatsapp_message(number, "pong ✅ v1.7")
         return {"status": "pong"}
     
     if msg_lc == "salut":
@@ -206,13 +206,16 @@ async def receive_message(request: Request):
                     return {"status": "pong"}
 
             if client["etape"] == "reseaux":
+                dernier_depot = client["depots"][-1] if client["depots"] else None
                 reseaux_messages = {
-                    "1": "Envoyez via Orange : *144*2*1*04264642*1000#\nNom : BOKOUM ISSIAKA",
-                    "2": "Envoyez via Moov : *555*2*1*63290016*1000#\nNom : ISSIAKO BUSINESS",
-                    "3": "Envoyez via Telecel : *808*2*1*58902040*1000#\nNom : BOKOUM ISSIAKA"
+                    "1": f"Envoyez via Orange : *144*2*1*04264642*{dernier_depot["montant"]}#\nNom : BOKOUM ISSIAKA",
+                    "2": "Envoyez via Moov : *555*2*1*63290016*{dernier_depot["montant"]}#\nNom : ISSIAKO BUSINESS",
+                    "3": "Envoyez via Telecel : *808*2*1*58902040*{dernier_depot["montant"]}#\nNom : BOKOUM ISSIAKA"
                 }
                 if msg_lc in reseaux_messages:
+                    dernier_depot = client["depots"][-1] if client["depots"] else None
                     client["etape"] = "numero"
+                    dernier_depot["reseaux"] = "reseaux"
                     send_whatsapp_message(number, reseaux_messages[msg_lc] + "\nEnsuite, envoyez le numéro utilisé pour la transaction.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
@@ -225,8 +228,10 @@ async def receive_message(request: Request):
 
             if client["etape"] == "numero":
                 numero = extraire_numero_local(msg_lc)
+                dernier_depot = client["depots"][-1] if client["depots"] else None
+                dernier_depot["numero"] = numero
                 if numero:
-                    send_whatsapp_message(number, f"Vous avez utilisé le numéro {numero}. Merci de nous envoyer une capture d'écran de confirmation de la transaction.")
+                    send_whatsapp_message(number, f"Vous avez utilisé le numéro {dernier_depot["numero"]}. Merci de nous envoyer une capture d'écran de confirmation de la transaction.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
