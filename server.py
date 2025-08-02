@@ -174,7 +174,7 @@ async def receive_message(request: Request):
                     depot_data = {
                         "montant": montant,
                         "idtrans": unique_id,
-                        "ID": "",
+                        "idBookmaker": "",
                         "bookmaker": "",
                         "numero": "",
                         "reseaux": "",
@@ -193,7 +193,9 @@ async def receive_message(request: Request):
                 ident = extraire_id_utilisateur(msg_lc)
                 if ident:
                     client["etape"] = "reseaux"
-                    send_whatsapp_message(number, f"Votre ID est {ident}. Choisissez un réseau :\n1 - Orange Money\n2 - Moov Money\n3 - Telecel Money")
+                    dernier_depot = client["depots"][-1] if client["depots"] else None
+                    dernier_depot["idBookmaker"] = ident
+                    send_whatsapp_message(number, f"Votre ID est {dernier_depot["idBookmaker"]}. Choisissez un réseau :\n1 - Orange Money\n2 - Moov Money\n3 - Telecel Money")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
@@ -207,7 +209,7 @@ async def receive_message(request: Request):
                 reseaux_messages = {
                     "1": "Envoyez via Orange : *144*2*1*04264642*1000#\nNom : BOKOUM ISSIAKA",
                     "2": "Envoyez via Moov : *555*2*1*63290016*1000#\nNom : ISSIAKO BUSINESS",
-                    "3": "Envoyez via Telecel : *808*2*1*58902040*1000#"
+                    "3": "Envoyez via Telecel : *808*2*1*58902040*1000#\nNom : BOKOUM ISSIAKA"
                 }
                 if msg_lc in reseaux_messages:
                     client["etape"] = "numero"
