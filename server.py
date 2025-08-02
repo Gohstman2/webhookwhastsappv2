@@ -208,9 +208,9 @@ async def receive_message(request: Request):
             if client["etape"] == "reseaux":
                 dernier_depot = client["depots"][-1] if client["depots"] else None
                 reseaux_messages = {
-                    "1": f"Envoyez via Orange : *144*2*1*04264642*{dernier_depot["montant"]}#\nNom : BOKOUM ISSIAKA",
-                    "2": "Envoyez via Moov : *555*2*1*63290016*{dernier_depot["montant"]}#\nNom : ISSIAKO BUSINESS",
-                    "3": "Envoyez via Telecel : *808*2*1*58902040*{dernier_depot["montant"]}#\nNom : BOKOUM ISSIAKA"
+                    "1": f"Envoyez via Orange : *144*2*1*04264642*{dernier_depot['montant']}#\nNom : BOKOUM ISSIAKA",
+                    "2": f"Envoyez via Moov : *555*2*1*63290016*{dernier_depot['montant']}#\nNom : ISSIAKO BUSINESS",
+                    "3": f"Envoyez via Telecel : *808*2*1*58902040*{dernier_depot['montant']}#\nNom : BOKOUM ISSIAKA"
                 }
                 if msg_lc in reseaux_messages:
                     dernier_depot = client["depots"][-1] if client["depots"] else None
@@ -231,6 +231,8 @@ async def receive_message(request: Request):
                 dernier_depot = client["depots"][-1] if client["depots"] else None
                 dernier_depot["numero"] = numero
                 if numero:
+                    dernier_depot = client["depots"][-1] if client["depots"] else None
+                    dernier_depot["numero"] = numero
                     send_whatsapp_message(number, f"Vous avez utilisé le numéro {dernier_depot["numero"]}. Merci de nous envoyer une capture d'écran de confirmation de la transaction.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
