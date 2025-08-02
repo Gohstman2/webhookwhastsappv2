@@ -196,7 +196,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.4")
+        send_whatsapp_message(number, "pong ✅ v1.5")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -233,7 +233,8 @@ async def receive_message(request: Request):
     "nom": "",
     "tache": "acceuil",
     "etape" : "",
-    "data": []
+    "data": [],
+    "depots":[]
 })
         
 
@@ -248,6 +249,7 @@ async def receive_message(request: Request):
                         client['tache'] = "acceuil"
                         client['etape'] = ""
                         client['data'] = []
+                        client['depots'] = []
                         send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assiatant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
                         return {"status": "pong"}
                         
