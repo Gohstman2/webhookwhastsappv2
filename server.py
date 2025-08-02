@@ -14,28 +14,48 @@ app = FastAPI()
 
 
 
+#fonction pour extraire le ID
+def extraire_id_utilisateur(message: str) -> int | None:
+    """
+    Extrait le premier ID utilisateur (une séquence de 6 à 12 chiffres) depuis un message.
+    """
+    # Normalise le message (minuscules, remplace les séparateurs classiques)
+    message = message.lower().replace('\xa0', ' ')
+
+    # Recherche une suite de chiffres assez longue (ID probable)
+    match = re.findall(r'\b\d{6,12}\b', message)
+
+    if match:
+        return int(match[0])  # Retourne le premier ID trouvé
+    return None
+
 # ma fonction pour extraire un montant dans un message
+
 def extraire_montant(message: str) -> int | None:
     """
-    Extrait le premier montant valide trouvé dans un message texte.
-    Retourne un entier (ex: 5000) ou None si aucun montant valide n’est trouvé.
+    Extrait un montant en FCFA depuis un message texte.
+    Gère les formats : 1000, 1 000, 1.000, 5 000 F, 1000fcfa, etc.
+    Ignore les montants hors plage (par défaut entre 500 et 200000).
     """
-    # Nettoyer le message (enlever les espaces insécables, caractères spéciaux inutiles)
-    message = message.replace('\xa0', ' ')
+    # Nettoyer le message : enlever les espaces non standard et normaliser
+    message = message.lower().replace('\xa0', ' ').replace('fcfa', '').replace('f', '').replace('fr', '')
+    message = message.replace('cfa', '').replace('fcf', '')
+    
+    # Trouver tous les nombres potentiels
+    candidats = re.findall(r'\d[\d\s.,]*\d|\d+', message)
 
-    # Chercher tous les nombres dans le texte, avec ou sans séparateurs
-    match = re.findall(r'\d{1,3}(?:[\s.,]?\d{3})*', message)
-
-    for m in match:
-        montant_str = re.sub(r'[^\d]', '', m)  # Supprime les espaces, virgules, points, etc.
+    for brut in candidats:
+        # Enlever les espaces, points, virgules pour normaliser le nombre
+        propre = re.sub(r'[^\d]', '', brut)
         try:
-            montant = int(montant_str)
-            if 500 <= montant <= 200000:  # ✅ plage de montant autorisé
+            montant = int(propre)
+            if 500 <= montant <= 200000:
                 return montant
         except ValueError:
             continue
 
     return None
+
 
 # === Fonction pour envoyer un message WhatsApp ===
 def send_whatsapp_message(number: str, message: str) -> bool:
@@ -152,7 +172,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1")
+        send_whatsapp_message(number, "pong ✅ v1.1")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -261,9 +281,25 @@ async def receive_message(request: Request):
                         montant = extraire_montant(msg_lc)
                         if montant :
                             send_whatsapp_message(number, f"Ok vous voulez un depot de {montant} Francs CFA \n Maintenant donner moi le ID de votre compte \n *S'il vous plait n'envoyer pas de capture*")
+                            client['tache'] = "depot"
+                            client['etape'] = "id"
                             return {"status": "pong"}
                         else :
                             send_whatsapp_message(number, "*Montant invalide* \n Envoyer moi le montant que vous souhaitez recharger, Exemple : 1000 ")
                             return {"status": "pong"}
+                    if client['etape'] == "id" :
+                        id = extraire_id_utilisateur(msg_lc)
+                        if id:
+                            send_whatsapp_message(number, f"Ok ! votre id est *{id}* \n Maintenant vous utiliser quelle reseaux pour le paiement \n 1-Orange Money \n 2-Moov Money \n 3-Telecel Money")
+                            return {"status": "pong"}
+                        elif msg_lc == "stop":
+                            send_whatsapp_message(number, "*Votre demande de depot a ete annuler*")
+                            client['tache'] = "acceuil" 
+                            client['etape'] = ""
+                            client['data'] = []
+                            send_whatsapp_message(number, "Vous voulez faire : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+                            return {"status": "pong"}
+                            
+                        
                                                   
                         
