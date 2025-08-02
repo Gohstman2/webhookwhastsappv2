@@ -306,7 +306,7 @@ async def receive_message(request: Request):
                     if client['etape'] == "montant" :
                         montant = extraire_montant(msg_lc)
                         if montant :
-                            unique_id = str(uuid.uuid4())[:8]  # Génère un petit ID unique
+                            unique_id = str(uuid.uuid4())[:8]
                             depot_data = {
                                 "montant": montant,
                                 "idtrans": unique_id,
@@ -314,21 +314,18 @@ async def receive_message(request: Request):
                                 "bookmaker": "",
                                 "numero": "",
                                 "reseaux": "",
-                                "statut": "en cours"
+                                "statut": "en cours" 
                             }
-                            # Assure-toi que 'depots' est une liste
-                            if not client["data"].get("depots"):
-                                client["data"]["depots"] = [depot_data]
-                            else:
-                                client["data"]["depots"].append(depot_data)
+                            client["data"].setdefault("depots", []).append(depot_data)
                             send_whatsapp_message(number, f"Ok vous voulez un depot de {montant} Francs CFA \n Maintenant donner moi le ID de votre compte \n *S'il vous plait n'envoyer pas de capture*")
                             client['tache'] = "depot"
                             client['etape'] = "id"
                             client['tacheId'] = unique_id
                             return {"status": "pong"}
-                        else :
+                        else:
                             send_whatsapp_message(number, "*Montant invalide* \n Envoyer moi le montant que vous souhaitez recharger, Exemple : 1000 ")
                             return {"status": "pong"}
+
                     if client['etape'] == "id" :
                         id = extraire_id_utilisateur(msg_lc)
                         if id:
