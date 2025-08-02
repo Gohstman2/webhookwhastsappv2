@@ -2,15 +2,40 @@ from fastapi import FastAPI, Request
 from datetime import datetime
 import json
 import requests
+import re
 
 # === CONFIG ===
 API_BASE = "https://senhatsappv2.onrender.com"
 OPENROUTER_API_KEY = "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"
 mesClients = []
 
+
 app = FastAPI()
 
 
+
+# ma fonction pour extraire un montant dans un message
+def extraire_montant(message: str) -> int | None:
+    """
+    Extrait le premier montant valide trouvé dans un message texte.
+    Retourne un entier (ex: 5000) ou None si aucun montant valide n’est trouvé.
+    """
+    # Nettoyer le message (enlever les espaces insécables, caractères spéciaux inutiles)
+    message = message.replace('\xa0', ' ')
+
+    # Chercher tous les nombres dans le texte, avec ou sans séparateurs
+    match = re.findall(r'\d{1,3}(?:[\s.,]?\d{3})*', message)
+
+    for m in match:
+        montant_str = re.sub(r'[^\d]', '', m)  # Supprime les espaces, virgules, points, etc.
+        try:
+            montant = int(montant_str)
+            if 500 <= montant <= 200000:  # ✅ plage de montant autorisé
+                return montant
+        except ValueError:
+            continue
+
+    return None
 
 # === Fonction pour envoyer un message WhatsApp ===
 def send_whatsapp_message(number: str, message: str) -> bool:
@@ -127,7 +152,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
 
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅")
+        send_whatsapp_message(number, "pong ✅ v1")
         return {"status": "pong"}
 
     if msg_lc == "salut":
@@ -194,21 +219,33 @@ async def receive_message(request: Request):
                     if client['etape'] == "bookmaker" :
                         if msg_lc == "1" :
                             send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            client['tache'] = "depot"
+                            client['etape'] = "montant"
                             return {"status": "pong"}
                         elif msg_lc == "2":
                             send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            client['tache'] = "depot"
+                            client['etape'] = "montant"
                             return {"status": "pong"}
                         elif msg_lc == "3" :
                             send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            client['tache'] = "depot"
+                            client['etape'] = "montant"
                             return {"status": "pong"}
                         elif msg_lc == "4":
                             send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            client['tache'] = "depot"
+                            client['etape'] = "montant"
                             return {"status": "pong"}
                         elif msg_lc == "5":
                             send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            client['tache'] = "depot"
+                            client['etape'] = "montant"
                             return {"status": "pong"}
                         elif msg_lc == "7":
                             send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            client['tache'] = "depot"
+                            client['etape'] = "montant"
                             return {"status": "pong"}
                         elif msg_lc == "stop":
                             send_whatsapp_message(number, "*Votre demande de depot a ete annuler*")
@@ -220,4 +257,13 @@ async def receive_message(request: Request):
                         else :
                             send_whatsapp_message(number, "J'ai pas compris votre message , Si vous souhaitez tout annuler envoyer moi *stop*")
                             return {"status": "pong"}
+                    if client['etape'] == "montant" :
+                        montant = extraire_montant(msg_lc)
+                        if montant :
+                            send_whatsapp_message(number, f"Ok vous voulez un depot de {montant} Francs CFA \n Maintenant donner moi le ID de votre compte \n *S'il vous plait n'envoyer pas de capture*")
+                            return {"status": "pong"}
+                        else :
+                            send_whatsapp_message(number, "*Montant invalide* \n Envoyer moi le montant que vous souhaitez recharger, Exemple : 1000 ")
+                            return {"status": "pong"}
+                                                  
                         
