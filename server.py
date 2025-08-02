@@ -145,7 +145,33 @@ async def receive_message(request: Request):
     "etape" : "",
     "data": []
 })
-            return {"status": "pong"} 
+    
+            return {"status": "pong"}
+
+    # Création d’un dictionnaire clé = numéro
+    clients_dict = {client['number']: client for client in mesClients}
+
+# Vérification
+    if number in clients_dict:
+        findClient = True
+    else:
+        findClient = False
+
+    if not findClient :
+        send_whatsapp_message(number, "Salut Bienvenue chez Rapide Cash\n Je suis un assiatant virtuelle dite moi vous voulez : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+        mesClients.append({
+    "number": number,
+    "nom": "",
+    "tache": "acceuil",
+    "etape" : "",
+    "data": []
+})
+        
+
+
+        
+        
+    
     for client in mesClients :
             if number == client['number'] :
                 if client['tache'] == "acceuil" :
@@ -166,6 +192,32 @@ async def receive_message(request: Request):
                         return {"status": "pong"}
                 if client['tache'] == "depot" :
                     if client['etape'] == "bookmaker" :
-                        send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
-                        return {"status": "pong"}
+                        if msg_lc == "1" :
+                            send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            return {"status": "pong"}
+                        elif msg_lc == "2":
+                            send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            return {"status": "pong"}
+                        elif msg_lc == "3" :
+                            send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            return {"status": "pong"}
+                        elif msg_lc == "4":
+                            send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            return {"status": "pong"}
+                        elif msg_lc == "5":
+                            send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            return {"status": "pong"}
+                        elif msg_lc == "7":
+                            send_whatsapp_message(number, "Super ! *Combien voulez vous deposer sur votre compte ?* \n *envoyer uniquement le montant entre : 500 et 200 000 ; Exemple : 1000*")
+                            return {"status": "pong"}
+                        elif msg_lc == "stop":
+                            send_whatsapp_message(number, "*Votre demande de depot a ete annuler*")
+                            client['tache'] = "acceuil" 
+                            client['etape'] = ""
+                            client['data'] = []
+                            send_whatsapp_message(number, "Vous voulez faire : \n 1-UN DEPOT \n 2-UN RETRAIT \n *S'il vous plait envoyer uniquement le numero correspondant a votre choix*")
+                            return {"status": "pong"}
+                        else :
+                            send_whatsapp_message(number, "J'ai pas compris votre message , Si vous souhaitez tout annuler envoyer moi *stop*")
+                            return {"status": "pong"}
                         
