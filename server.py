@@ -208,7 +208,8 @@ async def receive_message(request: Request):
             "etape": "",
             "data": [],
             "depots": [],
-            "tacheId": ""
+            "tacheId": "",
+            "bookmaker" :""
         })
         return {"status": "pong"}
 
@@ -234,7 +235,23 @@ async def receive_message(request: Request):
         if client["tache"] == "depot":
             if client["etape"] == "bookmaker":
                 if msg_lc in ["1", "2", "3", "4", "5", "6", "7"]:
-                    send_whatsapp_message(number, "Super ! Combien voulez-vous déposer ? (Ex: 1000)")
+                    if msg_lc == "1":
+                        client["bookmaker"] ="1Xbet"
+                    elif msg_lc == "2":
+                        client["bookmaker"] ="Melbet"
+                    elif msg_lc == "3":
+                        client["bookmaker"] ="Betwenner"
+                    elif msg_lc == "4" :
+                        client["bookmaker"] ="Linebet"
+                    elif msg_lc == "5":
+                        client["bookmaker"] ="1Win"
+                    elif msg_lc == "6":
+                        client["bookmaker"] ="Winwin"
+                    else :
+                        client["bookmaker"] ="888Starz"
+                    
+                        
+                    send_whatsapp_message(number, f"Super ! Combien voulez-vous déposer sur {client['bookmaker']} ? (Ex: 1000)")
                     client["etape"] = "montant"
                     return {"status": "pong"}
                 if msg_lc == "stop":
@@ -260,7 +277,7 @@ async def receive_message(request: Request):
                     client["depots"].append(depot_data)
                     client["etape"] = "id"
                     client["tacheId"] = unique_id
-                    send_whatsapp_message(number, f"Vous voulez déposer {montant} FCFA. Quel est l'ID de votre compte ?")
+                    send_whatsapp_message(number, f"Vous voulez déposer {montant} FCFA sur {client['bookmaker']}  . Envoyer moi le ID de votre compte {client['bookmaker']}")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
@@ -289,15 +306,15 @@ async def receive_message(request: Request):
             if client["etape"] == "reseaux":
                 dernier_depot = client["depots"][-1] if client["depots"] else None
                 reseaux_messages = {
-                    "1": f"Envoyez via Orange : *144*2*1*04264642*{dernier_depot['montant']}#\nNom : BOKOUM ISSIAKA",
-                    "2": f"Envoyez via Moov : *555*2*1*63290016*{dernier_depot['montant']}#\nNom : ISSIAKO BUSINESS",
-                    "3": f"Envoyez via Telecel : *808*2*1*58902040*{dernier_depot['montant']}#\nNom : BOKOUM ISSIAKA"
+                    "1": f"Envoyez {dernier_depot['montant']} FCFA via Orange au numero 04264642: *144*2*1*04264642*{dernier_depot['montant']}#\nNom : BOKOUM ISSIAKA",
+                    "2": f"Envoyez {dernier_depot['montant']} FCFA via Moov au numero 63290016: *555*2*1*63290016*{dernier_depot['montant']}#\nNom : ISSIAKO BUSINESS",
+                    "3": f"Envoyez {dernier_depot['montant']} FCFA via Telecel : *808*2*1*58902040*{dernier_depot['montant']}#\nNom : BOKOUM ISSIAKA"
                 }
                 if msg_lc in reseaux_messages:
                     dernier_depot = client["depots"][-1] if client["depots"] else None
                     client["etape"] = "numero"
                     dernier_depot["reseaux"] = "reseaux"
-                    send_whatsapp_message(number, reseaux_messages[msg_lc] + "\nEnsuite, envoyez le numéro utilisé pour la transaction.")
+                    send_whatsapp_message(number, reseaux_messages[msg_lc] + "\nEnsuite, envoyez le numéro avec lequel vous avez fait le transfert.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
@@ -330,7 +347,7 @@ async def receive_message(request: Request):
                 if media :
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
-                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*")
+                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*\n Bookmaker : {")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
@@ -339,6 +356,7 @@ async def receive_message(request: Request):
                 else : 
                     send_whatsapp_message(number, "Veuillez nous envoyer une capture d'ecran de votre message de transaction")
                     return {"status": "pong"}
+                
                     
 
     return {"status": "traité"}
