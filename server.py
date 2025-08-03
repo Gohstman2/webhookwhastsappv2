@@ -48,6 +48,41 @@ def envoyer_media_whatsapp(media: dict, numero: str) -> bool:
     except requests.exceptions.RequestException as e:
         print(f"⚠️ Erreur de connexion API : {e}")
         return False
+        #une deuxieme version de ma fonction pour envoyer des media + texte achrocher(caption)
+def envoyer_media_whatsappV2(media: dict, numero: str, caption: str = "") -> bool:
+    """
+    Envoie un média à un numéro WhatsApp avec un texte (caption) accroché.
+    
+    :param media: dict contenant les clés 'data', 'mimetype', 'filename'
+    :param numero: Numéro WhatsApp (ex: +22670123456)
+    :param caption: Texte à attacher au média
+    :return: True si succès, False sinon
+    """
+    url = f"{API_BASE}/sendMedia"
+
+    payload = {
+        "number": numero,
+        "media": {
+            "data": media["data"],
+            "mimetype": media["mimetype"],
+            "filename": media.get("filename", "media")
+        },
+        "caption": caption  # Texte accroché
+    }
+
+    try:
+        response = requests.post(url, json=payload, timeout=15)
+        result = response.json()
+        if result.get("success"):
+            print(f"✅ Média envoyé à {numero}")
+            return True
+        else:
+            print(f"❌ Erreur API : {result.get('error', 'Échec inconnu')}")
+            return False
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️ Erreur de connexion API : {e}")
+        return False
+
 
 # === UTILITAIRES ===
 def extraire_numero_local(message: str) -> str | None:
@@ -151,7 +186,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
     
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.9")
+        send_whatsapp_message(number, "pong ✅ v2.0")
         return {"status": "pong"}
     
     if msg_lc == "salut":
@@ -291,7 +326,7 @@ async def receive_message(request: Request):
                 if media :
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
-                    envoyer_media_whatsapp(media,"+22654641531")
+                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
