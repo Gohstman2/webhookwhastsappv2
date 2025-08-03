@@ -313,8 +313,13 @@ async def receive_message(request: Request):
                 if msg_lc in reseaux_messages:
                     dernier_depot = client["depots"][-1] if client["depots"] else None
                     client["etape"] = "numero"
-                    dernier_depot["reseaux"] = "reseaux"
-                    send_whatsapp_message(number, reseaux_messages[msg_lc] + "\nEnsuite, envoyez le numéro avec lequel vous avez fait le transfert.")
+                    if msg_lc == "1":
+                        dernier_depot["reseaux"] = "Orange"
+                    elif msg_lc == "2" :
+                        dernier_depot["reseaux"] = "Moov"
+                    else :
+                        dernier_depot["reseaux"] = "Telecel"
+                    send_whatsapp_message(number, reseaux_messages[msg_lc] + "\n Et envoyez moi votre numero {dernier_depot['reseaux'] Money que vous que vous avez utiliser.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
@@ -345,9 +350,11 @@ async def receive_message(request: Request):
                     return {"status": "pong"}
             if client["etape"] == "capture":
                 if media :
+                    dernier_depot = client["depots"][-1] if client["depots"] else None
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
-                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*\nBookmaker : {client['bookmaker']} \nID : {dernier_depot['idBookmaker']} \nMontant : {dernier_depot['montant']}")
+                    
+                    envoyer_media_whatsappV2(media,"+22654641531",f"*Une Nouvelle demande de depot*\nBookmaker : {client['bookmaker']} \nID : {dernier_depot['idBookmaker']} \nMontant : {dernier_depot['montant']}\nNumero {dernier_depot['reseaux']} : {dernier_depot['numero']}")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
@@ -355,6 +362,16 @@ async def receive_message(request: Request):
                     return {"status": "pong"}
                 else : 
                     send_whatsapp_message(number, "Veuillez nous envoyer une capture d'ecran de votre message de transaction")
+                    return {"status": "pong"}
+            if client["etape"] == "attente":
+                if media:
+                    send_whatsapp_message(number, f"Vous avez une demande de {client['tache']} \n Merci de patientez nous vous notifierons une fois terminer.\nSi votre demande prend trop de temps contactez nous : \nOrange : +22654641531\nMoov : +22663290016")
+                    return {"status": "pong"}
+                elif msg_lc =="Stop" :
+                    send_whatsapp_message(number, f"Vous ne pouvez plus annuler cette demande {client['tache']} \n Patienter que le systheme, approuve ou rejette avant de faire une nouvelle demande\nSi votre demande prend trop de temps contactez nous : \nOrange : +22654641531\nMoov : +22663290016")
+                    return {"status": "pong"}
+                else:
+                    send_whatsapp_message(number, f"Vous avez une demande de {client['tache']} \n Merci de patientez nous vous notifierons une fois terminer.\nSi votre demande prend trop de temps contactez nous : \nOrange : +22654641531\nMoov : +22663290016")
                     return {"status": "pong"}
                 
                     
