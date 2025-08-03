@@ -402,7 +402,7 @@ async def receive_message(request: Request):
                     # Données nécessaires
                     number = client["number"]
                     idtrans = dernier_depot["idtrans"]
-                    serveur = "https://senhatsappv2.onrender.com/traiter_depot"
+                    serveur = "https://webhookwhastsappv2-1.onrender.com/traiter_depot"
 
                     # Construire l'URL avec les paramètres encodés
                     
