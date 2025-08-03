@@ -149,8 +149,7 @@ async def receive_message(request: Request):
 
     number = "+" + sender.replace("@c.us", "")
     msg_lc = message.lower()
-    if media:
-        send_whatsapp_message(number, "Vous avez partager un media")
+    
     if msg_lc == ".ping":
         send_whatsapp_message(number, "pong ✅ v1.9")
         return {"status": "pong"}
@@ -291,13 +290,15 @@ async def receive_message(request: Request):
             if client["etape"] == "capture":
                 if media :
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
+                    client["etape"] = "attente"
+                    envoyer_media_whatsapp(media,"+22654641531")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
                     send_whatsapp_message(number, "Choisissez :\n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
                     return {"status": "pong"}
                 else : 
-                    send_whatsapp_message(number, "Veuillez nous envoyer une capture d'ecran Pour de votre message de transaction")
+                    send_whatsapp_message(number, "Veuillez nous envoyer une capture d'ecran de votre message de transaction")
                     return {"status": "pong"}
                     
 
