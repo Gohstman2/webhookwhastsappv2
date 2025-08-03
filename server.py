@@ -347,7 +347,7 @@ async def receive_message(request: Request):
                 if media :
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
-                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*\n Bookmaker : {")
+                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*\nBookmaker : {client['bookmaker']} \nID : {dernier_depot['idBookmaker']} \nMontant : {dernier_depot['montant']}")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
