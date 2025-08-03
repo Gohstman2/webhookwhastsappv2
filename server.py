@@ -4,11 +4,7 @@ import json
 import requests
 import re
 import uuid
-import easyocr
-from PIL import Image
-import base64
-import io
-import numpy as np
+
 
 
 # === CONFIG ===
@@ -19,21 +15,7 @@ mesClients = []
 app = FastAPI()
 
 
-def ocr_depuis_media(media: dict) -> str:
-    """
-    Lit le texte d'une image WhatsApp reçue via media.
-    
-    :param media: dict contenant "data" (base64), "mimetype"
-    :return: texte extrait
-    """
-    base64_data = media["data"]
-    image_bytes = base64.b64decode(base64_data)
-    image = Image.open(io.BytesIO(image_bytes))
 
-    reader = easyocr.Reader(['fr', 'en'])  # langue : français et anglais
-    result = reader.readtext(np.array(image), detail=0)
-
-    return "\n".join(result)
 
 #fonction pour envoyer un media
 def envoyer_media_whatsapp(media: dict, numero: str) -> bool:
@@ -348,9 +330,7 @@ async def receive_message(request: Request):
                 if media :
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
-                    texteTrans = ocr_depuis_media(media)
                     envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*")
-                    send_whatsapp_message(number,texteTrans)
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
