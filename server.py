@@ -145,15 +145,14 @@ async def receive_message(request: Request):
     message = data.get("body", "").strip()
     media = data.get("media")
     
-    if not sender or not message:
-        return {"status": "ignored"}
+    
 
     number = "+" + sender.replace("@c.us", "")
     msg_lc = message.lower()
     if media:
         send_whatsapp_message(number, "Vous avez partager un media")
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v1.8")
+        send_whatsapp_message(number, "pong ✅ v1.9")
         return {"status": "pong"}
     
     if msg_lc == "salut":
