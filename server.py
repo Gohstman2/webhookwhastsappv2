@@ -4,6 +4,7 @@ import json
 import requests
 import re
 import uuid
+from urllib.parse import urlencode
 
 
 
@@ -175,6 +176,50 @@ def home():
 @app.get("/status")
 def status():
     return "Activer ✅"
+@app.post("/traiter_depot")
+async def traiter_depot(request: Request):
+    """
+    Valide ou rejette une demande de dépôt.
+    Body attendu :
+      {
+        "number": "+22670123456",
+        "idtrans": "abc123ef",
+        "etat": "valider" ou "rejeter",
+        "cause": "Raison du rejet" (facultatif, requis si rejet)
+      }
+    """
+    data = await request.json()
+    number = data.get("number")
+    idtrans = data.get("idtrans")
+    etat = data.get("etat", "").lower()
+    cause = data.get("cause", "").strip()
+
+    if not number or not idtrans or etat not in ["valider", "rejeter"]:
+        raise HTTPException(status_code=400, detail="Champs number, idtrans et etat (valider/rejeter) sont requis")
+
+    if etat == "rejeter" and not cause:
+        raise HTTPException(status_code=400, detail="Le champ 'cause' est requis pour un rejet")
+
+    for client in mesClients:
+        if client["number"] == number:
+            for depot in client.get("depots", []):
+                if depot["idtrans"] == idtrans:
+                    depot["statut"] = etat
+                    if etat == "valider":
+                        send_whatsapp_message(
+                            number,
+                            f"✅ Votre dépôt de {depot['montant']} FCFA sur {client['bookmaker']} a été validé. Merci pour votre confiance."
+                        )
+                    else:
+                        depot["cause"] = cause  # On stocke aussi la cause dans le dépôt
+                        send_whatsapp_message(
+                            number,
+                            f"❌ Votre demande de dépôt a été rejetée.\n📌 Raison : {cause}\n\nSi vous pensez qu'il s'agit d'une erreur, contactez notre support."
+                        )
+                    return {"status": "ok", "message": f"Dépôt {etat} avec succès."}
+
+    raise HTTPException(status_code=404, detail="Client ou dépôt introuvable")
+
 
 # === WEBHOOK PRINCIPAL ===
 @app.post("/whatsapp")
@@ -190,7 +235,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
     
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v2.2")
+        send_whatsapp_message(number, "pong ✅ v2.3")
         return {"status": "pong"}
     
     if msg_lc == "salut":
@@ -353,8 +398,35 @@ async def receive_message(request: Request):
                     dernier_depot = client["depots"][-1] if client["depots"] else None
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
+                    PAGE_VALIDATION = "https://bkmservices.netlify.app/transactions_status"
+                    # Données nécessaires
+                    number = client["number"]
+                    idtrans = dernier_depot["idtrans"]
+                    serveur = "https://senhatsappv2.onrender.com/traiter_depot"
+
+                    # Construire l'URL avec les paramètres encodés
                     
-                    envoyer_media_whatsappV2(media,"+22654641531",f"*Une Nouvelle demande de depot*\nBookmaker : {client['bookmaker']} \nID : {dernier_depot['idBookmaker']} \nMontant : {dernier_depot['montant']}\nNumero {dernier_depot['reseaux']} : {dernier_depot['numero']}")
+
+                    params = urlencode({
+                    "number": number,
+                    "idtrans": idtrans,
+                    "serveur": serveur
+                        })
+                    url_validation = f"{PAGE_VALIDATION}?{params}"
+
+                    
+                    # Construire le message WhatsApp
+                    message = (
+                    "*📥 Nouvelle demande de dépôt*\n"
+                    f"🔸 *Bookmaker* : {client['bookmaker']}\n"
+                    f"🆔 *ID* : {dernier_depot['idBookmaker']}\n"
+                    f"💰 *Montant* : {dernier_depot['montant']} FCFA\n"
+                    f"📞 *Numéro {dernier_depot['reseaux']}* : {dernier_depot['numero']}\n\n"
+                    f"👉 *Valider ou rejeter ici :* {url_validation}")
+
+                    # Envoyer le média avec le message
+                    envoyer_media_whatsappV2(media,"+22654641531",message)
+
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
