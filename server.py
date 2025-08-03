@@ -58,7 +58,7 @@ def envoyer_media_whatsappV2(media: dict, numero: str, caption: str = "") -> boo
     :param caption: Texte à attacher au média
     :return: True si succès, False sinon
     """
-    url = f"{API_BASE}/sendMedia"
+    url = f"{API_BASE}/sendMediaV2"
 
     payload = {
         "number": numero,
