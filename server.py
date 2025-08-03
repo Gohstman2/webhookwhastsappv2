@@ -8,6 +8,8 @@ import easyocr
 from PIL import Image
 import base64
 import io
+import numpy as np
+
 
 # === CONFIG ===
 API_BASE = "https://senhatsappv2.onrender.com"
@@ -206,7 +208,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
     
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v2.1")
+        send_whatsapp_message(number, "pong ✅ v2.2")
         return {"status": "pong"}
     
     if msg_lc == "salut":
@@ -347,7 +349,8 @@ async def receive_message(request: Request):
                     send_whatsapp_message(number, f"Votre demande de depot a bien ete prix en compte , merci de nous contacter si votre compte n'est pas credite dans 5minutes")
                     client["etape"] = "attente"
                     texteTrans = ocr_depuis_media(media)
-                    envoyer_media_whatsappV2(media,"+22654641531",f"*Une Nouvelle demande de depot*\n {texteTrans}")
+                    envoyer_media_whatsappV2(media,"+22654641531","*Une Nouvelle demande de depot*")
+                    send_whatsapp_message(number,texteTrans)
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
