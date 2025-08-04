@@ -211,10 +211,10 @@ async def traiter_depot(request: Request):
                             f"✅ Votre dépôt de {depot['montant']} FCFA sur {client['bookmaker']} a été validé. Merci pour votre confiance."
                         )
                     else:
-                        depot["cause"] = cause  # On stocke aussi la cause dans le dépôt
+                        # On stocke aussi la cause dans le dépôt
                         send_whatsapp_message(
                             number,
-                            f"❌ Votre demande de dépôt a été rejetée.\n📌 Raison : {cause}\n\nSi vous pensez qu'il s'agit d'une erreur, contactez notre support."
+                            f"❌ Votre demande de dépôt a été rejetée.\n📌 Raison : \n\nSi vous pensez qu'il s'agit d'une erreur, contactez notre support."
                         )
                     return {"status": "ok", "message": f"Dépôt {etat} avec succès."}
 
@@ -337,7 +337,7 @@ async def receive_message(request: Request):
                     client["etape"] = "reseaux"
                     dernier_depot = client["depots"][-1] if client["depots"] else None
                     dernier_depot["idBookmaker"] = ident
-                    send_whatsapp_message(number, f"Votre ID est {dernier_depot["idBookmaker"]}. Choisissez un réseau :\n1 - Orange Money\n2 - Moov Money\n3 - Telecel Money")
+                    send_whatsapp_message(number, f"Votre ID est {dernier_depot['idBookmaker']}. Choisissez un réseau :\n1 - Orange Money\n2 - Moov Money\n3 - Telecel Money")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
@@ -364,7 +364,7 @@ async def receive_message(request: Request):
                         dernier_depot["reseaux"] = "Moov"
                     else :
                         dernier_depot["reseaux"] = "Telecel"
-                    send_whatsapp_message(number, reseaux_messages[msg_lc] + "\n Et envoyez moi votre numero {dernier_depot['reseaux'] Money que vous que vous avez utiliser.")
+                    send_whatsapp_message(number, reseaux_messages[msg_lc] + f"\n Et envoyez moi votre numero {dernier_depot['reseaux'] Money que vous que vous avez utiliser.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
