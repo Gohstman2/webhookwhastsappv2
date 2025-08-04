@@ -210,6 +210,7 @@ async def traiter_depot(request: Request):
                             number,
                             f"✅ Votre dépôt de {depot['montant']} FCFA sur {client['bookmaker']} a été validé. Merci pour votre confiance."
                         )
+                        client["etape"] = "clientPret"
                     else:
                         # On stocke aussi la cause dans le dépôt
                         send_whatsapp_message(
@@ -444,7 +445,12 @@ async def receive_message(request: Request):
                     return {"status": "pong"}
                 else:
                     send_whatsapp_message(number, f"Vous avez une demande de {client['tache']} \n Merci de patientez nous vous notifierons une fois terminer.\nSi votre demande prend trop de temps contactez nous : \nOrange : +22654641531\nMoov : +22663290016")
+                    return {"status": "pong"} 
+            if client["etape"] == "clientPret":
+                if msg_lc :
+                    send_whatsapp_message(number, "Salut, Choisissez une operation : \n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
                     return {"status": "pong"}
+                
                 
                     
 
