@@ -364,7 +364,7 @@ async def receive_message(request: Request):
                         dernier_depot["reseaux"] = "Moov"
                     else :
                         dernier_depot["reseaux"] = "Telecel"
-                    send_whatsapp_message(number, reseaux_messages[msg_lc] + f"\n Et envoyez moi votre numero {dernier_depot['reseaux'] Money que vous que vous avez utiliser.")
+                    send_whatsapp_message(number, reseaux_messages[msg_lc] + f"\n Et envoyez moi votre numero {dernier_depot['reseaux']} Money que vous que vous avez utiliser.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
                     client.update({"tache": "acceuil", "etape": "", "data": []})
