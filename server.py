@@ -193,7 +193,7 @@ async def traiter_depot(request: Request):
     idtrans = data.get("idtrans")
     etat = data.get("etat", "").lower()
     cause = data.get("cause", "").strip()
-
+    
     if not number or not idtrans or etat not in ["valider", "rejeter"]:
         raise HTTPException(status_code=400, detail="Champs number, idtrans et etat (valider/rejeter) sont requis")
 
@@ -237,8 +237,12 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
     
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v2.3")
+        send_whatsapp_message(number, "pong ✅ v2.4")
         return {"status": "pong"}
+    if context :
+        send_whatsapp_message(number, "Vous avez repondu a un message")
+        return {"status": "pong"}
+
     
     if msg_lc == "salut":
         send_whatsapp_message(number, "Oui salut ! Que puis-je faire pour vous ?")
