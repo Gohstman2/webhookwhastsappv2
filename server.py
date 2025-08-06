@@ -12,12 +12,24 @@ from urllib.parse import urlencode
 API_BASE = "https://senhatsappv3.onrender.com"
 OPENROUTER_API_KEY = "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"
 mesClients = []
-adminNumber = "+22654641531"
+adminNumber = "22654641531"
 
 app = FastAPI()
 
 
 
+
+def get_unique_id(text):
+    match = re.search(r"uniqueID\s*:\s*([^\s]+)", text)
+    if match:
+        return match.group(1)  # La valeur trouvée
+    return None
+
+# Exemple d'utilisation
+texte = "Voici le code uniqueID : 8f14d3b0 à utiliser."
+unique_id = get_unique_id(texte)
+
+print(unique_id)  # Résultat : 8f14d3b0
 
 #fonction pour envoyer un media
 def envoyer_media_whatsapp(media: dict, numero: str) -> bool:
