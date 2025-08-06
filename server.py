@@ -229,6 +229,7 @@ async def receive_message(request: Request):
     sender = data.get("from")
     message = data.get("body", "").strip()
     media = data.get("media")
+    context = data.get("context")
     
     
 
@@ -450,6 +451,10 @@ async def receive_message(request: Request):
                 if msg_lc :
                     send_whatsapp_message(number, "Salut, Choisissez une operation : \n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
                     return {"status": "pong"}
+            if context :
+                send_whatsapp_message(number, "Vous avez repondu a un message")
+                return {"status": "pong"}
+                
                 
                 
                     
