@@ -12,7 +12,7 @@ from urllib.parse import urlencode
 API_BASE = "https://senhatsappv3.onrender.com"
 OPENROUTER_API_KEY = "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"
 mesClients = []
-adminNumber = "22654641531"
+adminNumber = "+22654641531"
 
 app = FastAPI()
 
@@ -439,10 +439,11 @@ async def receive_message(request: Request):
                     f"🆔 *ID* : {dernier_depot['idBookmaker']}\n"
                     f"💰 *Montant* : {dernier_depot['montant']} FCFA\n"
                     f"📞 *Numéro {dernier_depot['reseaux']}* : {dernier_depot['numero']}\n\n"
-                    f"👉 *Valider ou rejeter ici :* {url_validation}")
+                    f"🆔 uniqueID : {dernier_depot['idtrans']}")
 
                     # Envoyer le média avec le message
                     envoyer_media_whatsappV2(media,"+22654641531",message)
+                    send_whatsapp_message(number, f"{dernier_depot['idBookmaker']}") 
 
                     return {"status": "pong"}
                 elif msg_lc == "stop":
@@ -473,9 +474,10 @@ async def receive_message(request: Request):
                 
     if number == adminNumber :
         if context :
-            contextMsg = context.body
+            contextMsg = context.get("body", "")
             if msg_lc == "Valider" :
-                send_whatsapp_message(number, "Vous avez valider cette demande")
+                idtrans = get_unique_id(contextMsg)
+                send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
         else:
             send_whatsapp_message(number, "Vous devez repondre e un messge en le glissant de vers la droite pour que je puisse vous comprendre")
             return {"status": "pong"}
