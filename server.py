@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 API_BASE = "https://senhatsappv3.onrender.com"
 OPENROUTER_API_KEY = "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"
 mesClients = []
+adminNumber = "+22654641531"
 
 app = FastAPI()
 
@@ -239,9 +240,7 @@ async def receive_message(request: Request):
     if msg_lc == ".ping":
         send_whatsapp_message(number, "pong ✅ v2.4")
         return {"status": "pong"}
-    if context :
-        send_whatsapp_message(number, "Vous avez repondu a un message")
-        return {"status": "pong"}
+
 
     
     if msg_lc == "salut":
@@ -250,7 +249,7 @@ async def receive_message(request: Request):
 
     # Initialisation du client
     clients_dict = {client['number']: client for client in mesClients}
-    if number not in clients_dict:
+    if number not in clients_dict and number != adminNumber:
         send_whatsapp_message(number, "Salut et bienvenue chez Rapide Cash.\nJe suis un assistant virtuel.\n1 - UN DÉPÔT\n2 - UN RETRAIT\n*Veuillez envoyer uniquement le numéro correspondant à votre choix.*")
         mesClients.append({
             "number": number,
@@ -458,7 +457,16 @@ async def receive_message(request: Request):
             if context :
                 send_whatsapp_message(number, "Vous avez repondu a un message")
                 return {"status": "pong"}
+    
                 
+    if number == adminNumber :
+        if context :
+            contextMsg = context.body
+            if msg_lc == "Valider" :
+                send_whatsapp_message(number, "Vous avez valider cette demande")
+        else:
+            send_whatsapp_message(number, "Vous devez repondre e un messge en le glissant de vers la droite pour que je puisse vous comprendre")
+            return {"status": "pong"}
                 
                 
                     
