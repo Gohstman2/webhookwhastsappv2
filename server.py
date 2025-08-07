@@ -446,16 +446,17 @@ async def receive_message(request: Request):
                     # Construire le message WhatsApp
                     message = (
                     "*📥 Nouvelle demande de dépôt*\n"
+                    f"🆔 uniqueID : {dernier_depot['idtrans']}\n"
                     f"🔸 *Bookmaker* : {client['bookmaker']}\n"
                     f"🆔 *ID* : {dernier_depot['idBookmaker']}\n"
                     f"💰 *Montant* : {dernier_depot['montant']} FCFA\n"
                     f"📞 *Numéro {dernier_depot['reseaux']}* : {dernier_depot['numero']}\n\n"
-                    f"    *Whatsapp du client* : {number}"
-                    f"🆔 uniqueID : {dernier_depot['idtrans']}")
+                    f"📞 *Whatsapp du client* : {number}"
+                    )
 
                     # Envoyer le média avec le message
                     envoyer_media_whatsappV2(media,"+22654641531",message)
-                    send_whatsapp_message(number, f"{dernier_depot['idBookmaker']}") 
+                    send_whatsapp_message("+22654641531", f"{dernier_depot['idBookmaker']}") 
 
                     return {"status": "pong"}
                 elif msg_lc == "stop":
