@@ -483,9 +483,9 @@ async def receive_message(request: Request):
                 
     if number == adminNumber :
         if context :
-            contextMsg = context.get("body", "")
+
             if msg_lc == "valider":
-                send_whatsapp_message(number, f"Vous avez envoyer valider \n context :{contextMsg}")
+                send_whatsapp_message(number, "Vous avez envoyer valider \n context :{contextMsg} \n numero whatsapp :")
                 return {"status": "pong"}
                 
             else :
