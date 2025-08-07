@@ -498,6 +498,8 @@ async def receive_message(request: Request):
                                 return {"status": "pong"}
                         send_whatsapp_message(number, f"Je ne trouve plus la demande de depot veuillez m'envoyer le uniqueID de la demande")
                         return {"status": "pong"}
+                    send_whatsapp_message(number, f"Je ne retrouve plus le client {whatsappNumber}")
+                    return {"status": "pong"}
             else :
                 send_whatsapp_message(number, f"J'ai pas compris compris votre message envoyerz moi \n Valider : si le depot est valider \n Rejeter : si la demande est rejeter")
                 return {"status": "pong"}
