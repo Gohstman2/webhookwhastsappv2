@@ -240,7 +240,7 @@ async def traiter_depot(request: Request):
                     return {"status": "ok", "message": f"Dépôt {etat} avec succès."}
 
     raise HTTPException(status_code=404, detail="Client ou dépôt introuvable")
-
+send_whatsapp_message("+22654641531", f"Je suis en ligne")
 
 # === WEBHOOK PRINCIPAL ===
 @app.post("/whatsapp")
@@ -485,25 +485,15 @@ async def receive_message(request: Request):
         if context :
             contextMsg = context.get("body", "")
             if msg_lc == "valider":
-                idtrans = get_unique_id(contextMsg)
+                send_whatsapp_message(number, f"Vous avez envoyer valider \n context :{contextMsg}")
+                return {"status": "pong"}
                 
-                for client in mesClients:
-                    if client["number"] == "+22673713252":
-                        for depot in client.get("depots", []):
-                            if depot["idtrans"] == idtrans:
-                                depot["statut"] = "Valider"
-                                send_whatsapp_message("+22673713252":, "Votre compte a ete crediter")
-                                send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
-                                client["etape"] = "clientPret"
-                                return {"status": "pong"}
-                        send_whatsapp_message(number, f"Je ne trouve plus la demande de depot veuillez m'envoyer le uniqueID de la demande")
-                        return {"status": "pong"}
             else :
                 send_whatsapp_message(number, f"J'ai pas compris compris votre message envoyerz moi \n Valider : si le depot est valider \n Rejeter : si la demande est rejeter")
                 return {"status": "pong"}
                 
         else:
-            send_whatsapp_message(number, "Vous devez repondre e un messge en le glissant de vers la droite pour que je puisse vous comprendre")
+            send_whatsapp_message(number, "Vous devez repondre a un messge en le glissant de  la gauche vers la droite pour que je puisse vous comprendre")
             return {"status": "pong"}
                 
                 
