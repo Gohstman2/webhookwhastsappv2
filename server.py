@@ -18,11 +18,7 @@ app = FastAPI()
 
 
 def extraire_numero_apres_phrase(texte: str) -> str | None:
-    """
-    Cherche la phrase 'Whatsapp du client :' dans le texte,
-    puis extrait tous les chiffres qui suivent immédiatement (avec ou sans espace).
-    """
-    pattern = r"Whatsapp du client\s*:\s*(\d+)"
+    pattern = r"Whatsapp du client\s*:\s*(\+?\d+)"
     match = re.search(pattern, texte, re.IGNORECASE)
     if match:
         return match.group(1)
@@ -261,7 +257,7 @@ async def receive_message(request: Request):
     msg_lc = message.lower()
     
     if msg_lc == ".ping":
-        send_whatsapp_message(number, "pong ✅ v2.4")
+        send_whatsapp_message(number, "pong ✅ v2.5")
         return {"status": "pong"}
 
 
@@ -490,13 +486,13 @@ async def receive_message(request: Request):
             contextMsg = context.get("body", "")
             if msg_lc == "valider":
                 idtrans = get_unique_id(contextMsg)
-                
+                whatsappNumber = extraire_numero_apres_phrase(contextMsg)
                 for client in mesClients:
-                    if client["number"] == "+22654641531":
+                    if client["number"] == whatsappNumber:
                         for depot in client.get("depots", []):
                             if depot["idtrans"] == idtrans:
                                 depot["statut"] = "Valider"
-                                send_whatsapp_message("+22654641531", "Votre compte a ete crediter")
+                                send_whatsapp_message(whatsappNumber, "Votre compte a ete crediter")
                                 send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
                                 client["etape"] = "clientPret"
                                 return {"status": "pong"}
