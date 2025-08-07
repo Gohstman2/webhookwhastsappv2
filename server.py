@@ -486,13 +486,13 @@ async def receive_message(request: Request):
             contextMsg = context.get("body", "")
             if msg_lc == "valider":
                 idtrans = get_unique_id(contextMsg)
-                whatsappNumber = extraire_numero_apres_phrase(contextMsg)
+                
                 for client in mesClients:
-                    if client["number"] == whatsappNumber:
+                    if client["number"] == "+22673713252":
                         for depot in client.get("depots", []):
                             if depot["idtrans"] == idtrans:
                                 depot["statut"] = "Valider"
-                                send_whatsapp_message(whatsappNumber, "Votre compte a ete crediter")
+                                send_whatsapp_message("+22673713252":, "Votre compte a ete crediter")
                                 send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
                                 client["etape"] = "clientPret"
                                 return {"status": "pong"}
