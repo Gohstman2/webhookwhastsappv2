@@ -484,7 +484,7 @@ async def receive_message(request: Request):
     if number == adminNumber :
         if context :
             contextMsg = context.get("body", "")
-            if msg_lc == "valider":
+            if msg_lc == "valider" or msg_lc == "valider " or msg_lc == " valider" or msg_lc == "valide" or msg_lc == "valide " or msg_lc == " valide" or msg_lc == "crediter" or msg_lc == "crediter " or msg_lc == "credite ":
                 idtrans = get_unique_id(contextMsg)
                 whatsappNumber = extraire_numero_apres_phrase(contextMsg)
                 for client in mesClients:
