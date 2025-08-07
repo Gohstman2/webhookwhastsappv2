@@ -395,7 +395,8 @@ async def receive_message(request: Request):
                     send_whatsapp_message(number, reseaux_messages[msg_lc] + f"\n Et envoyez moi votre numero {dernier_depot['reseaux']} Money que vous que vous avez utiliser.")
                     return {"status": "pong"}
                 elif msg_lc == "stop":
-                    client.update({"tache": "acceuil", "etape": "", "data": []})
+                    
+                    client.update({"tache": "acceuil", "etape": ""})
                     send_whatsapp_message(number, "Votre demande de dépôt a été annulée. Retour au menu principal.")
                     send_whatsapp_message(number, "Choisissez :\n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
                     return {"status": "pong"}
@@ -479,6 +480,7 @@ async def receive_message(request: Request):
             if client["etape"] == "clientPret":
                 if msg_lc :
                     send_whatsapp_message(number, "Salut, Choisissez une operation : \n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
+                    client["tache"] = "acceuil"
                     return {"status": "pong"}
             
     
@@ -493,9 +495,10 @@ async def receive_message(request: Request):
                     if client["number"] == numeroWhatsapp:
                         for depot in client.get("depots", []):
                             if depot["idtrans"] == idtrans:
-                                depot["statut"] = "Valider"
+                                depot["etat"] = "Valider"
                                 send_whatsapp_message(numeroWhatsapp, "Votre compte a ete crediter")
                                 send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
+                                client["etape"] = "clientPret"
                                 return {"status": "pong"}
                         send_whatsapp_message(number, f"Je ne trouve plus la demande de depot veuillez m'envoyer le uniqueID de la demande")
                         return {"status": "pong"}
