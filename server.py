@@ -475,9 +475,14 @@ async def receive_message(request: Request):
     if number == adminNumber :
         if context :
             contextMsg = context.get("body", "")
-            if msg_lc == "Valider" :
+            if msg_lc :
                 idtrans = get_unique_id(contextMsg)
                 send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
+                return {"status": "pong"}
+            else :
+                send_whatsapp_message(number, f"Vous n'avez pas envoyer de messages")
+                return {"status": "pong"}
+                
         else:
             send_whatsapp_message(number, "Vous devez repondre e un messge en le glissant de vers la droite pour que je puisse vous comprendre")
             return {"status": "pong"}
