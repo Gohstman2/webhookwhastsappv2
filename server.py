@@ -17,6 +17,17 @@ adminNumber = "+22654641531"
 app = FastAPI()
 
 
+def extraire_numero_apres_phrase(texte: str) -> str | None:
+    """
+    Cherche la phrase 'Whatsapp du client :' dans le texte,
+    puis extrait tous les chiffres qui suivent immédiatement (avec ou sans espace).
+    """
+    pattern = r"Whatsapp du client\s*:\s*(\d+)"
+    match = re.search(pattern, texte, re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return None
+
 
 
 def get_unique_id(text):
@@ -439,6 +450,7 @@ async def receive_message(request: Request):
                     f"🆔 *ID* : {dernier_depot['idBookmaker']}\n"
                     f"💰 *Montant* : {dernier_depot['montant']} FCFA\n"
                     f"📞 *Numéro {dernier_depot['reseaux']}* : {dernier_depot['numero']}\n\n"
+                    f"    *Whatsapp du client* : {number}"
                     f"🆔 uniqueID : {dernier_depot['idtrans']}")
 
                     # Envoyer le média avec le message
@@ -467,18 +479,23 @@ async def receive_message(request: Request):
                 if msg_lc :
                     send_whatsapp_message(number, "Salut, Choisissez une operation : \n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
                     return {"status": "pong"}
-            if context :
-                send_whatsapp_message(number, "Vous avez repondu a un message")
-                return {"status": "pong"}
+            
     
                 
     if number == adminNumber :
         if context :
             contextMsg = context.get("body", "")
-            if msg_lc :
+            if msg_lc == "valider" :
                 idtrans = get_unique_id(contextMsg)
-                send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
-                return {"status": "pong"}
+                numeroWhatsapp = extraire_numero_apres_phrase(contextMsg)
+                for client in mesClients:
+                    if client["number"] == numeroWhatsapp:
+                        for depot in client.get("depots", []):
+                            if depot["idtrans"] == idtrans:
+                                depot["statut"] = "Valider"
+                                send_whatsapp_message(numeroWhatsapp, "Votre compte a ete crediter")
+                                send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
+                                return {"status": "pong"}
             else :
                 send_whatsapp_message(number, f"Vous n'avez pas envoyer de messages")
                 return {"status": "pong"}
