@@ -486,7 +486,7 @@ async def receive_message(request: Request):
     if number == adminNumber :
         if context :
             contextMsg = context.get("body", "")
-            if msg_lc :
+            if msg_lc == "valider":
                 idtrans = get_unique_id(contextMsg)
                 numeroWhatsapp = extraire_numero_apres_phrase(contextMsg)
                 for client in mesClients:
@@ -497,8 +497,10 @@ async def receive_message(request: Request):
                                 send_whatsapp_message(numeroWhatsapp, "Votre compte a ete crediter")
                                 send_whatsapp_message(number, f"Vous avez valider cette demande : {idtrans}")
                                 return {"status": "pong"}
+                        send_whatsapp_message(number, f"Je ne trouve plus la demande de depot veuillez m'envoyer le uniqueID de la demande")
+                        return {"status": "pong"}
             else :
-                send_whatsapp_message(number, f"Vous n'avez pas envoyer de messages")
+                send_whatsapp_message(number, f"J'ai pas compris compris votre message envoyerz moi \n Valider : si le depot est valider \n Rejeter : si la demande est rejeter")
                 return {"status": "pong"}
                 
         else:
