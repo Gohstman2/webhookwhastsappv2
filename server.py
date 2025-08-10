@@ -448,7 +448,7 @@ async def receive_message(request: Request):
                     f"🆔 *ID* : {dernier_depot['idBookmaker']}\n"
                     f"💰 *Montant* : {dernier_depot['montant']} FCFA\n"
                     f"📞 *Numéro {dernier_depot['reseaux']}* : {dernier_depot['numero']}\n\n"
-                    f"📞 *Whatsapp du client* : {number}"
+                    f"📞 Whatsapp du client : {number}"
                     )
 
                     # Envoyer le média avec le message
@@ -486,7 +486,9 @@ async def receive_message(request: Request):
             contextMsg = context.get("body", "")
             if msg_lc == "valider" or msg_lc == "valider " or msg_lc == " valider" or msg_lc == "valide" or msg_lc == "valide " or msg_lc == " valide" or msg_lc == "crediter" or msg_lc == "crediter " or msg_lc == "credite ":
                 idtrans = get_unique_id(contextMsg)
+                idtrans = idtrans.replace(" ","")
                 whatsappNumber = extraire_numero_apres_phrase(contextMsg)
+                whatsappNumber = whatsappNumber.replace(" ","")
                 for client in mesClients:
                     if client["number"] == whatsappNumber:
                         for depot in client.get("depots", []):
@@ -498,7 +500,7 @@ async def receive_message(request: Request):
                                 return {"status": "pong"}
                         send_whatsapp_message(number, f"Je ne trouve plus la demande de depot veuillez m'envoyer le uniqueID de la demande")
                         return {"status": "pong"}
-                    send_whatsapp_message(number, f"Je ne retrouve plus le client {whatsappNumber}")
+                send_whatsapp_message(number, f"Je ne retrouve plus le client {whatsappNumber}")
                     return {"status": "pong"}
             else :
                 send_whatsapp_message(number, f"J'ai pas compris compris votre message envoyerz moi \n Valider : si le depot est valider \n Rejeter : si la demande est rejeter")
