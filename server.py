@@ -448,7 +448,7 @@ async def receive_message(request: Request):
                     f"🆔 *ID* : {dernier_depot['idBookmaker']}\n"
                     f"💰 *Montant* : {dernier_depot['montant']} FCFA\n"
                     f"📞 *Numéro {dernier_depot['reseaux']}* : {dernier_depot['numero']}\n\n"
-                    f"📞 Whatsapp du client : {number}"
+                    f"📞 Whatsapp du client :{number}"
                     )
 
                     # Envoyer le média avec le message
