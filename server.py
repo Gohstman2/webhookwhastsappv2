@@ -551,10 +551,10 @@ async def receive_message(request: Request):
                 return {"status": "pong"}
             if client["etape"] == "montant":
                 if client["etape"] == "montant":
-                montant = extraire_montant(msg_lc)
-                if montant:
-                    unique_id = str(uuid.uuid4())[:8]
-                    retrait_data = {
+                    montant = extraire_montant(msg_lc)
+                    if montant:
+                        unique_id = str(uuid.uuid4())[:8]
+                        retrait_data = {
                         "montant": montant,
                         "idtrans": unique_id,
                         "idBookmaker": "",
@@ -564,17 +564,17 @@ async def receive_message(request: Request):
                         "statut": "en cours",
                         "code_retrait":""
                     }
-                    client["retraits"].append(retrait_data)
-                    client["etape"] = "id"
-                    client["tacheId"] = unique_id
-                    send_whatsapp_message(number, f"Vous voulez retirer {montant} FCFA sur {client['bookmaker']}  . Envoyer moi le ID de votre compte {client['bookmaker']}")
-                    return {"status": "pong"}
-                elif msg_lc == "stop":
-                    send_whatsapp_message(number, "Votre demande de retrait a été annulée. Retour au menu principal.")
-                    send_whatsapp_message(number, "Choisissez :\n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
-                else:
-                    send_whatsapp_message(number, "Montant invalide. Veuillez envoyer un nombre entre 500 et 200000.")
-                    return {"status": "pong"}
+                        client["retraits"].append(retrait_data)
+                        client["etape"] = "id"
+                        client["tacheId"] = unique_id
+                        send_whatsapp_message(number, f"Vous voulez retirer {montant} FCFA sur {client['bookmaker']}  . Envoyer moi le ID de votre compte {client['bookmaker']}")
+                        return {"status": "pong"}
+                    elif msg_lc == "stop":
+                        send_whatsapp_message(number, "Votre demande de retrait a été annulée. Retour au menu principal.")
+                        send_whatsapp_message(number, "Choisissez :\n 1-DEPOT \n 2-Retrait \nEnvoyez uniquement le numero correspondant a votre choix")
+                    else:
+                        send_whatsapp_message(number, "Montant invalide. Veuillez envoyer un nombre entre 500 et 200000.")
+                        return {"status": "pong"}
             if client["etape"] == "id" :
                     ident = extraire_id_utilisateur(msg_lc)
                 if ident:
