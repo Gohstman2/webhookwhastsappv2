@@ -264,12 +264,14 @@ async def receive_message(request: Request):
     
     if msg_lc == "salut":
         send_whatsapp_message(number, "Oui salut ! Que puis-je faire pour vous ?")
+        send_whatsapp_message(number, "Envoyer moi depot pour commencer votre demande de depot")
         return {"status": "pong"}
 
     # Initialisation du client
     clients_dict = {client['number']: client for client in mesClients}
     if number not in clients_dict and number != adminNumber:
-        send_whatsapp_message(number, "Salut et bienvenue chez Rapide Cash.\nJe suis un assistant virtuel.\n1 - UN DÉPÔT\n2 - UN RETRAIT\n*Veuillez envoyer uniquement le numéro correspondant à votre choix.*")
+        send_whatsapp_message(number, "Salut et bienvenue chez Rapide Cash.\nJe suis un assistant virtuel.\n1 - UN DÉPÔT\n2 - UN RETRAIT\n")
+        send_whatsapp_message(number, "*Veuillez envoyer uniquement le numéro correspondant à votre choix, envoyer moi 1 pour faire un depot.*")
         mesClients.append({
             "number": number,
             "nom": "",
